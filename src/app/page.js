@@ -15,7 +15,7 @@ export default function Home() {
             Votre confort, notre priorité.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
-              <a href='/register' className="bg-purple-600 text-white px-8 py-3 rounded-md hover:bg-purple-600 transition-colors duration-200 font-semibold animate-pulse">Reserver un chambre maintenant</a>
+              <a href='/register' className="bg-purple-600 text-white px-8 py-3 rounded-md hover:bg-purple-600 transition-colors duration-200 font-semibold animate-pulse">Reserver une chambre maintenant</a>
             </div>
           </div>
           <div className="flex-1">
