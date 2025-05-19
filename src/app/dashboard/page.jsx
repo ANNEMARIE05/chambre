@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Bell, LogOut, Home, PlusCircle, ShoppingBag, List, Settings, Menu, X, User, Calendar, TrendingUp, Users } from 'lucide-react';
+import { Bell, LogOut, Home, PlusCircle, ShoppingBag, List, Settings, Menu, X, User, Calendar, DollarSign, TrendingUp, Users } from 'lucide-react';
 
 export default function Dashboard() {
   const router = useRouter();
@@ -42,7 +42,8 @@ export default function Dashboard() {
               <MobileSidebarItem icon={<Home size={20} />} text="Dashboard" href="/dashboard" active={true} />
               <MobileSidebarItem icon={<List size={20} />} text="Mes Chambres" href="/dashboard/rooms" />
               <MobileSidebarItem icon={<PlusCircle size={20} />} text="Ajouter Chambre" href="/dashboard/rooms/add" />
-              <MobileSidebarItem icon={<ShoppingBag size={20} />} text="Commandes" href="/dashboard/orders" />
+              <MobileSidebarItem icon={<Users size={20} />} text="Clients" href="/dashboard/clients" />
+              <MobileSidebarItem icon={<ShoppingBag size={20} />} text="Reservations" href="/dashboard/orders" />
               <MobileSidebarItem icon={<Calendar size={20} />} text="Nouvelle Commande" href="/dashboard/orders/create" />
               <MobileSidebarItem icon={<Settings size={20} />} text="Paramètres" href="/dashboard/settings" />
             </div>
@@ -89,7 +90,8 @@ export default function Dashboard() {
                 <SidebarItem icon={<Home size={20} />} text="Dashboard" href="/dashboard" active={true} />
                 <SidebarItem icon={<List size={20} />} text="Mes Chambres" href="/dashboard/rooms" />
                 <SidebarItem icon={<PlusCircle size={20} />} text="Ajouter Chambre" href="/dashboard/rooms/add" />
-                <SidebarItem icon={<ShoppingBag size={20} />} text="Commandes" href="/dashboard/orders" />
+                <SidebarItem icon={<Users size={20} />} text="Clients" href="/dashboard/clients" />
+                <SidebarItem icon={<ShoppingBag size={20} />} text="Reservations" href="/dashboard/orders" />
                 <SidebarItem icon={<Calendar size={20} />} text="Nouvelle Commande" href="/dashboard/orders/create" />
                 <SidebarItem icon={<Settings size={20} />} text="Paramètres" href="/dashboard/settings" />
               </nav>
@@ -264,42 +266,35 @@ export default function Dashboard() {
   );
 }
 
-// Components
-function SidebarItem({ icon, text, href, active = false }) {
-  return (
-    <Link
-      href={href}
-      className={`group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-150 ${
-        active 
-          ? 'bg-gradient-to-r from-violet-500 to-indigo-600 text-white shadow-md' 
-          : 'text-slate-200 hover:bg-white/10 hover:text-white'
-      }`}
-    >
-      <div className={`mr-3 p-1 rounded-md transition-colors ${active ? 'bg-white/20' : 'group-hover:bg-white/10 bg-transparent'}`}>
-        {icon}
-      </div>
-      {text}
-    </Link>
-  );
-}
+const SidebarItem = ({ icon, text, href, active }) => (
+  <a
+    href={href}
+    className={`flex items-center px-3 py-2 rounded-lg transition-colors ${
+      active
+        ? 'bg-white/10 text-white'
+        : 'text-gray-300 hover:bg-white/5 hover:text-white'
+    }`}
+  >
+    <div className={`p-2 rounded-md ${active ? 'bg-white/10' : ''}`}>
+      {icon}
+    </div>
+    <span className="ml-3">{text}</span>
+  </a>
+);
 
-function MobileSidebarItem({ icon, text, href, active = false }) {
-  return (
-    <Link
-      href={href}
-      className={`group flex items-center px-3 py-2 text-base font-medium rounded-lg transition-all duration-150 ${
-        active 
-          ? 'bg-gradient-to-r from-violet-500 to-indigo-600 text-white shadow-md' 
-          : 'text-slate-200 hover:bg-white/10 hover:text-white'
-      }`}
-    >
-      <div className={`mr-3 p-1 rounded-md transition-colors ${active ? 'bg-white/20' : 'group-hover:bg-white/10 bg-transparent'}`}>
-        {icon}
-      </div>
-      {text}
-    </Link>
-  );
-}
+const MobileSidebarItem = ({ icon, text, href, active }) => (
+  <a
+    href={href}
+    className={`flex items-center px-3 py-2 text-white rounded-lg transition-colors ${
+      active
+        ? 'bg-white/10'
+        : 'hover:bg-white/5'
+    }`}
+  >
+    {icon}
+    <span className="ml-3">{text}</span>
+  </a>
+);
 
 function StatCard({ title, value, icon, trend, trendColor }) {
   return (
