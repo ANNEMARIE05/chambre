@@ -92,7 +92,6 @@ export default function SettingAdmin() {
                 <SidebarItem icon={<Home size={20} />} text="Dashboard" href="/dashboard" />
                 <SidebarItem icon={<List size={20} />} text="Mes Chambres" href="/dashboard/rooms" />
                 <SidebarItem icon={<PlusCircle size={20} />} text="Ajouter Chambre" href="/dashboard/rooms/add" />
-                <SidebarItem icon={<Users size={20} />} text="Clients" href="/dashboard/clients" />
                 <SidebarItem icon={<Calendar size={20} />} text="Nouvelle Commande" href="/dashboard/orders/create" />
                 <SidebarItem icon={<Settings size={20} />} text="Paramètres" href="/dashboard/settings" active={true} />
               </nav>
