@@ -9,7 +9,7 @@ import {
   Users
 } from 'lucide-react';
 
-export default function AddRoom() {
+export default function RoomsAdd() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const router = useRouter();
   const [isLoaded, setIsLoaded] = useState(false);
@@ -79,7 +79,7 @@ export default function AddRoom() {
           </nav>
           <div className="flex-shrink-0 flex border-t border-indigo-800/30 p-4">
             <button
-              onClick={() => router.push('/login')}
+              onClick={() => router.push('/auth/login')}
               className="flex items-center text-white hover:text-gray-200 transition-colors w-full rounded-lg hover:bg-white/5 p-2"
             >
               <LogOut className="mr-3 h-5 w-5" />
@@ -127,7 +127,7 @@ export default function AddRoom() {
             </div>
             <div className="flex-shrink-0 flex border-t border-slate-700/30 p-4">
               <button
-                onClick={() => router.push('/login')}
+                onClick={() => router.push('/auth/login')}
                 className="flex items-center text-white hover:text-gray-200 transition-colors group w-full rounded-lg hover:bg-white/5 p-2"
               >
                 <div className="p-2 rounded-md group-hover:bg-white/10 transition-colors">

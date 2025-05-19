@@ -86,7 +86,7 @@ export default function RoomsList() {
               <MobileSidebarItem icon={<List size={20} />} text="Mes Chambres" href="/dashboard/rooms" active={true} />
               <MobileSidebarItem icon={<PlusCircle size={20} />} text="Ajouter Chambre" href="/dashboard/rooms/add" />
               <MobileSidebarItem icon={<Users size={20} />} text="Clients" href="/dashboard/clients" />
-              <MobileSidebarItem icon={<ShoppingBag size={20} />} text="Reservations" href="/dashboard/orders" />
+              <MobileSidebarItem icon={<ShoppingBag size={20} />} text="Commandes" href="/dashboard/orders" />
               <MobileSidebarItem icon={<Calendar size={20} />} text="Nouvelle Commande" href="/dashboard/orders/create" />
               <MobileSidebarItem icon={<Settings size={20} />} text="Paramètres" href="/dashboard/settings" />
             </div>
@@ -134,7 +134,7 @@ export default function RoomsList() {
                 <SidebarItem icon={<List size={20} />} text="Mes Chambres" href="/dashboard/rooms" active={true} />
                 <SidebarItem icon={<PlusCircle size={20} />} text="Ajouter Chambre" href="/dashboard/rooms/add" />
                 <SidebarItem icon={<Users size={20} />} text="Clients" href="/dashboard/clients" />
-                <SidebarItem icon={<ShoppingBag size={20} />} text="Reservations" href="/dashboard/orders" />
+                <SidebarItem icon={<ShoppingBag size={20} />} text="Commandes" href="/dashboard/orders" />
                 <SidebarItem icon={<Calendar size={20} />} text="Nouvelle Commande" href="/dashboard/orders/create" />
                 <SidebarItem icon={<Settings size={20} />} text="Paramètres" href="/dashboard/settings" />
               </nav>
