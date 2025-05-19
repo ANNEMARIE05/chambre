@@ -589,11 +589,7 @@ function RoomCard({ id, titre, prix, duree, capacite, image, notation, descripti
         <div className="absolute top-0 right-0 m-3 px-2 py-1 bg-purple-600 text-white text-xs font-bold rounded-lg shadow-md">
           {prix} / {duree}
         </div>
-        {notation >= 4.8 && (
-          <div className="absolute top-0 left-0 m-3 px-2 py-1 bg-yellow-500 text-white text-xs font-bold rounded-lg shadow-md">
-            TOP CHOIX
-          </div>
-        )}
+       
       </div>
       <div className="p-5">
         <div className="flex justify-between items-start">

@@ -5,11 +5,10 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { 
   Bell, LogOut, Home, PlusCircle, ShoppingBag, List, Settings, 
-  Menu, X, User, Calendar, DollarSign, TrendingUp, Star, Eye, 
-  Users
+  Menu, X, User, Calendar
 } from 'lucide-react';
 
-export default function AddRoom() {
+export default function SettingAdmin() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const router = useRouter();
   const [isLoaded, setIsLoaded] = useState(false);
@@ -45,11 +44,10 @@ export default function AddRoom() {
             <div className="px-3 space-y-1">
               <MobileSidebarItem icon={<Home size={20} />} text="Dashboard" href="/dashboard" />
               <MobileSidebarItem icon={<List size={20} />} text="Mes Chambres" href="/dashboard/rooms" />
-              <MobileSidebarItem icon={<PlusCircle size={20} />} text="Ajouter Chambre" href="/dashboard/rooms/add" active={true} />
-              <MobileSidebarItem icon={<Users size={20} />} text="Clients" href="/dashboard/clients" />
+              <MobileSidebarItem icon={<PlusCircle size={20} />} text="Ajouter Chambre" href="/dashboard/rooms/add" />
               <MobileSidebarItem icon={<ShoppingBag size={20} />} text="Commandes" href="/dashboard/orders" />
               <MobileSidebarItem icon={<Calendar size={20} />} text="Nouvelle Commande" href="/dashboard/orders/create" />
-              <MobileSidebarItem icon={<Settings size={20} />} text="Paramètres" href="/dashboard/settings" />
+              <MobileSidebarItem icon={<Settings size={20} />} text="Paramètres" href="/dashboard/settings" active={true} />
             </div>
           </nav>
           <div className="flex-shrink-0 flex border-t border-indigo-800/30 p-4">
@@ -93,11 +91,10 @@ export default function AddRoom() {
               <nav className="flex-1 px-3 py-4 space-y-1">
                 <SidebarItem icon={<Home size={20} />} text="Dashboard" href="/dashboard" />
                 <SidebarItem icon={<List size={20} />} text="Mes Chambres" href="/dashboard/rooms" />
-                <SidebarItem icon={<PlusCircle size={20} />} text="Ajouter Chambre" href="/dashboard/rooms/add" active={true} />
+                <SidebarItem icon={<PlusCircle size={20} />} text="Ajouter Chambre" href="/dashboard/rooms/add" />
                 <SidebarItem icon={<Users size={20} />} text="Clients" href="/dashboard/clients" />
-                <SidebarItem icon={<ShoppingBag size={20} />} text="Commandes" href="/dashboard/orders" />
                 <SidebarItem icon={<Calendar size={20} />} text="Nouvelle Commande" href="/dashboard/orders/create" />
-                <SidebarItem icon={<Settings size={20} />} text="Paramètres" href="/dashboard/settings" />
+                <SidebarItem icon={<Settings size={20} />} text="Paramètres" href="/dashboard/settings" active={true} />
               </nav>
             </div>
             <div className="flex-shrink-0 flex border-t border-slate-700/30 p-4">
