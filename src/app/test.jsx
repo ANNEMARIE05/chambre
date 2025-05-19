@@ -1,130 +1,181 @@
 'use client'
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import {
-  Bell, LogOut, Home, PlusCircle, ShoppingBag, List, Settings, Menu, X,Search,
-  User, Calendar, Users
+import { 
+  Bell, LogOut, Home, PlusCircle, ShoppingBag, List, Settings, 
+  Menu, X, User, Calendar, DollarSign, TrendingUp, Star, Eye, 
+  Users
 } from 'lucide-react';
-import ClientLists from './clients/page';
-import SettingsPage from './settings/page';
-import RoomsList from './rooms/page';
-import RoomsAdd from './rooms/add/page';
-import DashboardHome from './dashboardHome/page';
-import ReservationsCreate from './orders/create/page';
-import ReservationsList from './orders/page';
 
 export default function Dashboard() {
-  const router = useRouter();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const router = useRouter();
+  const [isLoaded, setIsLoaded] = useState(false);
 
-  const renderMainContent = () => {
-    switch (activeTab) {
-      case 'dashboard': return <DashboardHome />;
-      case 'rooms': return <RoomsList />;
-      case 'rooms-add': return <RoomsAdd />;
-      case 'clients': return <ClientLists />;
-      case 'orders': return <ReservationsList />;
-      case 'orders-create': return <ReservationsCreate />;
-      case 'settings': return <SettingsPage />;
-      default: return <DashboardHome />;
-    }
-  };
-
-  const menuItems = [
-    { key: 'dashboard', label: 'Dashboard', icon: <Home size={20} /> },
-    { key: 'rooms', label: 'Mes Chambres', icon: <List size={20} /> },
-    { key: 'rooms-add', label: 'Ajouter Chambre', icon: <PlusCircle size={20} /> },
-    { key: 'clients', label: 'Clients', icon: <Users size={20} /> },
-    { key: 'orders', label: 'Réservations', icon: <ShoppingBag size={20} /> },
-    { key: 'orders-create', label: 'Nouvelle Commande', icon: <Calendar size={20} /> },
-    { key: 'settings', label: 'Paramètres', icon: <Settings size={20} /> }
-  ];
+  // Effet pour animer le chargement initial
+  useEffect(() => {
+    setIsLoaded(true);
+  }, []);
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
-      {/* Sidebar (mobile) */}
+    <div className="flex h-screen bg-gray-50">
+      {/* Sidebar pour mobile (hidden par défaut) */}
       <div className={`fixed inset-0 z-40 lg:hidden ${isSidebarOpen ? 'block' : 'hidden'}`}>
-        <div className="fixed inset-0 bg-black/50" onClick={() => setIsSidebarOpen(false)} />
-        <div className="absolute left-0 top-0 w-64 bg-gradient-to-br from-slate-800 via-slate-900 to-indigo-900 p-4 shadow-xl h-full overflow-y-auto">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl text-white font-bold">Maison d'hôte</h2>
-            <button onClick={() => setIsSidebarOpen(false)} className="text-white">
-              <X />
+        <div className="fixed inset-0 bg-slate-900 bg-opacity-60 backdrop-blur-sm transition-opacity" onClick={() => setIsSidebarOpen(false)}></div>
+        <div className="fixed inset-y-0 left-0 flex flex-col w-64 max-w-xs bg-gradient-to-br from-slate-800 via-slate-900 to-indigo-900 shadow-xl transform transition-all ease-in-out duration-300">
+          <div className="flex items-center justify-between h-16 px-6 border-b border-slate-700/50">
+            <div className="flex items-center justify-center space-x-2">
+              <div className="h-8 w-8 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-full flex items-center justify-center transform hover:scale-105 transition-transform duration-300 shadow-lg shadow-violet-600/20">
+                <Home size={15} className="text-white" />
+              </div>
+              <h1 className="text-xl font-extrabold bg-gradient-to-r from-violet-400 to-indigo-300 bg-clip-text text-transparent">
+                Maison d'hôte
+              </h1>
+            </div>
+            <button 
+              onClick={() => setIsSidebarOpen(false)}
+              className="text-white hover:text-gray-200 transition-colors p-1 rounded-full hover:bg-white/10"
+            >
+              <X size={24} />
             </button>
           </div>
-          <ul>
-            {menuItems.map(item => (
-              <li key={item.key}>
-                <button
-                  onClick={() => { setActiveTab(item.key); setIsSidebarOpen(false); }}
-                  className={`flex items-center w-full px-3 py-2 text-sm rounded-md text-white hover:bg-white/10 ${activeTab === item.key ? 'bg-white/10' : ''}`}
-                >
-                  {item.icon}
-                  <span className="ml-2">{item.label}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-          <button
-            onClick={() => router.push('/auth/login')}
-            className="mt-6 flex items-center w-full text-white hover:bg-white/10 px-3 py-2 rounded-md"
-          >
-            <LogOut size={18} className="mr-2" /> Déconnexion
-          </button>
+          <nav className="flex-1 overflow-y-auto pt-5 pb-4">
+            <div className="px-3 space-y-1">
+              <MobileSidebarItem icon={<Home size={20} />} text="Chambres" tab="rooms" />
+              <MobileSidebarItem icon={<Calendar size={20} />} text="Mes réservations" tab="bookings" />
+              <MobileSidebarItem icon={<Calendar size={20} />} text="Commandes" tab="commande" />
+              <MobileSidebarItem icon={<Heart size={20} />} text="Favoris" tab="favorites" />
+              <MobileSidebarItem icon={<User size={20} />} text="Mon profil" tab="profile" />
+            </div>
+          </nav>
+          <div className="flex-shrink-0 flex border-t border-indigo-800/30 p-4">
+            <button
+              onClick={() => router.push('/login')}
+              className="flex items-center text-white hover:text-gray-200 transition-colors w-full rounded-lg hover:bg-white/5 p-2"
+            >
+              <LogOut className="mr-3 h-5 w-5" />
+              <span>Déconnexion</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Sidebar (desktop) */}
-      <div className="hidden lg:flex lg:flex-col lg:w-64 bg-gradient-to-br from-slate-800 via-slate-900 to-indigo-900 text-white shadow-lg">
-        <div className="h-16 flex items-center justify-center text-xl font-bold border-b border-slate-700">
-          Maison d'hôte
-        </div>
-        <div className="flex-1 p-4 overflow-y-auto">
-          <ul className="space-y-2">
-            {menuItems.map(item => (
-              <li key={item.key}>
-                <button
-                  onClick={() => setActiveTab(item.key)}
-                  className={`flex items-center w-full px-3 py-2 text-sm rounded-md hover:bg-white/10 ${activeTab === item.key ? 'bg-white/10' : ''}`}
-                >
-                  {item.icon}
-                  <span className="ml-2">{item.label}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div className="p-4 border-t border-slate-700">
-          <button
-            onClick={() => router.push('/auth/login')}
-            className="flex items-center w-full px-3 py-2 text-sm hover:bg-white/10 rounded-md"
-          >
-            <LogOut size={18} className="mr-2" /> Déconnexion
-          </button>
+      {/* Sidebar desktop */}
+      <div className="hidden lg:flex lg:flex-shrink-0">
+        <div className="flex flex-col w-72">
+          <div className={`flex flex-col h-0 flex-1 bg-gradient-to-br from-slate-800 via-slate-900 to-indigo-900 shadow-lg transition-all duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
+            <div className="flex items-center h-16 flex-shrink-0 px-6 border-b border-slate-700/50">
+              <div className="flex items-center justify-center space-x-2">
+                <div className="h-8 w-8 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-full flex items-center justify-center transform hover:scale-105 transition-transform duration-300 shadow-lg shadow-violet-600/20">
+                  <Home size={15} className="text-white" />
+                </div>
+                <h1 className="text-xl font-extrabold bg-gradient-to-r from-violet-400 to-indigo-300 bg-clip-text text-transparent">
+                  Maison d'hôte
+                </h1>
+              </div>
+            </div>
+            <div className="flex-1 flex flex-col overflow-y-auto">
+              <div className="p-4">
+                <div className="flex items-center bg-white/5 backdrop-blur-sm rounded-xl p-3 border border-white/10 shadow-xl">
+                  <div className="flex-shrink-0 h-10 w-10 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-600/20">
+                    <User size={20} className="text-white" />
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-white">Nom du client</p>
+                    <p className="text-xs text-slate-300">Client fidèle</p>
+                  </div>
+                </div>
+              </div>
+              <nav className="flex-1 px-3 py-4 space-y-1">
+                <SidebarItem icon={<Home size={20} />} text="Chambres" tab="rooms" />
+                <SidebarItem icon={<Calendar size={20} />} text="Mes réservations" tab="bookings" />
+                <SidebarItem icon={<Calendar size={20} />} text="Commandes" tab="commande" />
+                <SidebarItem icon={<Heart size={20} />} text="Favoris" tab="favorites" />
+                <SidebarItem icon={<User size={20} />} text="Mon profil" tab="profile" />
+              </nav>
+            </div>
+            <div className="flex-shrink-0 flex border-t border-slate-700/30 p-4">
+              <button
+                onClick={() => router.push('/login')}
+                className="flex items-center text-white hover:text-gray-200 transition-colors group w-full rounded-lg hover:bg-white/5 p-2"
+              >
+                <div className="p-2 rounded-md group-hover:bg-white/10 transition-colors">
+                  <LogOut className="h-5 w-5" />
+                </div>
+                <span className="ml-3">Déconnexion</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Top bar */}
-        <div className="flex items-center justify-between px-4 py-3 border-b bg-white shadow lg:hidden">
-          <button onClick={() => setIsSidebarOpen(true)}>
-            <Menu />
+      <div className="flex flex-col w-0 flex-1 h-screen overflow-auto">
+        {/* Top navigation */}
+        <div className={`relative z-10 flex-shrink-0 flex h-16 bg-white shadow-md transition-all duration-700 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
+          <button
+            type="button"
+            className="px-4 text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 lg:hidden"
+            onClick={() => setIsSidebarOpen(true)}
+          >
+            <Menu size={24} />
           </button>
-          <h2 className="text-lg font-bold">{menuItems.find(item => item.key === activeTab)?.label}</h2>
-          <div />
+          <div className="flex-1 px-4 flex justify-between">
+            <div className="flex-1 flex items-center">
+              <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
+            </div>
+            <div className="ml-4 flex items-center md:ml-6 space-x-4">
+              <button className="p-2 rounded-full text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors relative">
+                <Bell size={20} />
+                <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500 transform translate-x-1 -translate-y-1"></span>
+              </button>
+              <div className="bg-gradient-to-r from-teal-100 to-teal-50 text-teal-800 pl-3 pr-4 py-1.5 rounded-full flex items-center shadow-sm border border-teal-200 hover:from-teal-50 hover:to-teal-100 transition-colors">
+                <div className="w-6 h-6 rounded-full bg-teal-600 text-white flex items-center justify-center mr-2 shadow-sm">
+                  <User size={14} />
+                </div>
+                <span className="text-sm font-medium">Propriétaire</span>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Content area */}
-        <main className="flex-1 overflow-y-auto bg-gray-50">
-          {renderMainContent()}
+        {/* Main content */}
+        <main className={`flex-1 relative overflow-y-auto focus:outline-none p-6 transition-all duration-700 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+          
         </main>
       </div>
     </div>
   );
 }
 
+const SidebarItem = ({ icon, text, href, active }) => (
+  <a
+    href={href}
+    className={`flex items-center px-3 py-2 rounded-lg transition-colors ${
+      active
+        ? 'bg-white/10 text-white'
+        : 'text-gray-300 hover:bg-white/5 hover:text-white'
+    }`}
+  >
+    <div className={`p-2 rounded-md ${active ? 'bg-white/10' : ''}`}>
+      {icon}
+    </div>
+    <span className="ml-3">{text}</span>
+  </a>
+);
 
-
+const MobileSidebarItem = ({ icon, text, href, active }) => (
+  <a
+    href={href}
+    className={`flex items-center px-3 py-2 text-white rounded-lg transition-colors ${
+      active
+        ? 'bg-white/10'
+        : 'hover:bg-white/5'
+    }`}
+  >
+    {icon}
+    <span className="ml-3">{text}</span>
+  </a>
+);
