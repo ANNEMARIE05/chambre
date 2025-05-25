@@ -1,7 +1,7 @@
 "use client"
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { Heart, Users, Star, Search, Menu, X, HomeIcon, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Heart, Users, Star, Search, Menu, X, HomeIcon, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const chambres = [
@@ -79,25 +79,6 @@ const chambres = [
   }
 ];
 
-// Slides pour le carousel
-const heroSlides = [
-  {
-    image: "https://img.freepik.com/photos-gratuite/chambre-hotel-luxe-moderne-chambre-coucher-confortable_105762-1783.jpg?w=1380&t=st=1746485126~exp=1746485726~hmac=fb2a9f94b5af26b12b3db4ccd9ef0fa6ca1b21c3aee5c5ae7ca3d9a4dab9b651",
-    title: "Un séjour chaleureux et confortable",
-    description: "Découvrez nos chambres accueillantes"
-  },
-  {
-    image: "https://img.freepik.com/photos-premium/arriere-plan-violet-fonce_1170794-468523.jpg?uid=R99967860&ga=GA1.1.295640253.1746478949&semt=ais_hybrid&w=740",
-    title: "Détente et bien-être",
-    description: "Profitez de notre espace détente pour un moment de relaxation"
-  },
-  {
-    image: "https://img.freepik.com/photos-premium/rendering-3d-magnifique-suite-chambre-luxe-contemporaine-dans-hotel-television_1029473-137979.jpg?uid=R99967860&ga=GA1.1.295640253.1746478949&semt=ais_hybrid&w=740",
-    title: "Une expérience culinaire unique",
-    description: "Savourez notre petit-déjeuner fait maison"
-  }
-];
-
 // Animation variants
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },
@@ -117,6 +98,12 @@ const staggerContainer = {
 const cardVariants = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } }
+};
+
+const pageTransition = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 0.6 } },
+  exit: { opacity: 0, transition: { duration: 0.4 } }
 };
 
 const RatingStars = ({ rating }) => {
@@ -143,16 +130,21 @@ const RatingStars = ({ rating }) => {
   );
 };
 
-export default function Homepage() {
+export default function ChambreLists() {
   const [favorites, setFavorites] = useState([]);
   const [filteredChambres, setFilteredChambres] = useState(chambres);
   const [searchTerm, setSearchTerm] = useState('');
-  const [capacityFilter, setCapacityFilter] = useState('');
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false); // Simulate login state
-  const [currentSlide, setCurrentSlide] = useState(0);
   const [isVisible, setIsVisible] = useState({});
+  const [sortOption, setSortOption] = useState('default');
+  const [filterOptions, setFilterOptions] = useState({
+    capacity: '',
+    available: 'all',
+    priceRange: ''
+  });
+  const [showFilters, setShowFilters] = useState(false);
   
   // Handle scroll effects and observer setup
   useEffect(() => {
@@ -188,19 +180,11 @@ export default function Homepage() {
     };
   }, []);
   
-  // Automatic carousel slide change
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev === heroSlides.length - 1 ? 0 : prev + 1));
-    }, 5000);
-    
-    return () => clearInterval(interval);
-  }, []);
-  
   // Handle room filtering
   useEffect(() => {
     let result = chambres;
     
+    // Search filtering
     if (searchTerm) {
       result = result.filter(room => 
         room.titre.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -208,13 +192,48 @@ export default function Homepage() {
       );
     }
     
-    if (capacityFilter) {
-      const capacity = parseInt(capacityFilter);
+    // Capacity filtering
+    if (filterOptions.capacity) {
+      const capacity = parseInt(filterOptions.capacity);
       result = result.filter(room => room.capacite >= capacity);
     }
     
+    // Availability filtering
+    if (filterOptions.available !== 'all') {
+      const isAvailable = filterOptions.available === 'available';
+      result = result.filter(room => room.disponible === isAvailable);
+    }
+    
+    // Price range filtering
+    if (filterOptions.priceRange) {
+      const [min, max] = filterOptions.priceRange.split('-').map(price => parseInt(price));
+      result = result.filter(room => {
+        const roomPrice = parseInt(room.prix.replace(/\D/g, ''));
+        return roomPrice >= min && (max ? roomPrice <= max : true);
+      });
+    }
+    
+    // Sorting
+    switch (sortOption) {
+      case 'price-asc':
+        result.sort((a, b) => parseInt(a.prix.replace(/\D/g, '')) - parseInt(b.prix.replace(/\D/g, '')));
+        break;
+      case 'price-desc':
+        result.sort((a, b) => parseInt(b.prix.replace(/\D/g, '')) - parseInt(a.prix.replace(/\D/g, '')));
+        break;
+      case 'rating-desc':
+        result.sort((a, b) => b.notation - a.notation);
+        break;
+      case 'capacity-desc':
+        result.sort((a, b) => b.capacite - a.capacite);
+        break;
+      default:
+        // Default sorting (by id)
+        result.sort((a, b) => a.id - b.id);
+    }
+    
     setFilteredChambres(result);
-  }, [searchTerm, capacityFilter]);
+  }, [searchTerm, sortOption, filterOptions]);
   
   const toggleFavorite = (index) => {
     if (!isLoggedIn) {
@@ -235,20 +254,28 @@ export default function Homepage() {
       return;
     }
     
-    window.location.href = `/auth/login`;
+    window.location.href = `/dashUser/details/${roomId}`;
   };
 
-  const nextSlide = () => {
-    setCurrentSlide((prev) => (prev === heroSlides.length - 1 ? 0 : prev + 1));
-  };
-
-  const prevSlide = () => {
-    setCurrentSlide((prev) => (prev === 0 ? heroSlides.length - 1 : prev - 1));
+  const resetFilters = () => {
+    setSearchTerm('');
+    setSortOption('default');
+    setFilterOptions({
+      capacity: '',
+      available: 'all',
+      priceRange: ''
+    });
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans selection:bg-purple-100 selection:text-purple-800">
-      {/* Header & Navigation - Déplacé en tant qu'élément fixe avant le slider */}
+    <motion.div 
+      className="min-h-screen bg-gray-50 font-sans selection:bg-purple-100 selection:text-purple-800"
+      variants={pageTransition}
+      initial="hidden"
+      animate="visible"
+      exit="exit"
+    >
+      {/* Header & Navigation */}
       <header className={`${isScrolled ? 'bg-white/95 shadow-md' : 'bg-white shadow-md'} py-4 fixed top-0 left-0 right-0 w-full z-50 transition-all duration-300`}>
         <div className="mx-auto container max-w-7xl flex justify-between items-center px-6">
           <motion.div 
@@ -257,15 +284,17 @@ export default function Homepage() {
             transition={{ duration: 0.5 }}
             className="flex items-center space-x-2"
           >
-            <div className="h-10 w-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center shadow-lg">
-              <HomeIcon size={22} className="text-white" />
-            </div>
+            <Link href="/">
+              <div className="h-10 w-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center shadow-lg cursor-pointer">
+                <HomeIcon size={22} className="text-white" />
+              </div>
+            </Link>
             <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-indigo-600 bg-clip-text text-transparent">Maison d'Hôte</h1>
           </motion.div>
           
           {/* Desktop Navigation */}
           <nav className="hidden md:flex space-x-8 font-medium">
-            {["Accueil", "Chambres",  "À propos", "Contact"].map((item, i) => (
+            {["Accueil", "Chambres", "À propos", "Contact"].map((item, i) => (
               <motion.div
                 key={item}
                 initial={{ opacity: 0, y: -10 }}
@@ -274,10 +303,10 @@ export default function Homepage() {
               >
                 <Link 
                   href={item === "Accueil" ? "/" : `/homepage/${item.toLowerCase().replace(" ", "-")}`} 
-                  className={`text-gray-700 hover:text-purple-600 relative group transition-colors duration-300 ${item === "Accueil" ? 'text-purple-600' : ''}`}
+                  className={`text-gray-700 hover:text-purple-600 relative group transition-colors duration-300 ${item === "Chambres" ? 'text-purple-600' : ''}`}
                 >
                   {item}
-                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-purple-400 group-hover:w-full transition-all duration-300"></span>
+                  <span className={`absolute bottom-0 left-0 h-0.5 bg-purple-400 transition-all duration-300 ${item === "Chambres" ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
                 </Link>
               </motion.div>
             ))}
@@ -365,7 +394,7 @@ export default function Homepage() {
                     <motion.div key={item} variants={fadeIn}>
                       <Link 
                         href={item === "Accueil" ? "/" : `/${item.toLowerCase().replace(" ", "-")}`}
-                        className="text-gray-800 hover:text-purple-600 font-medium py-2 border-b border-gray-100 block transition-colors duration-300"
+                        className={`text-gray-800 hover:text-purple-600 font-medium py-2 border-b border-gray-100 block transition-colors duration-300 ${item === "Chambres" ? 'text-purple-600' : ''}`}
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         {item}
@@ -399,166 +428,166 @@ export default function Homepage() {
         </AnimatePresence>
       </header>
 
-      {/* Hero Carousel Section - Déplacé après la navbar */}
-      <section className="relative h-[80vh] overflow-hidden relative h-[80vh] overflow-hidden">
-        {/* Carousel Slides */}
-        <div className="h-full relative">
-          {heroSlides.map((slide, index) => (
+      {/* Main Content - Chambres List */}
+      <main className="pt-16 pb-16">
+        {/* Page Title */}
+        <section className="bg-gradient-to-r from-purple-500 to-indigo-600 py-12 mb-12">
+          <div className="container mx-auto max-w-6xl px-6">
             <motion.div 
-              key={index}
-              initial={{ opacity: 0 }}
-              animate={{ 
-                opacity: index === currentSlide ? 1 : 0,
-                zIndex: index === currentSlide ? 10 : 0 
-              }}
-              transition={{ 
-                opacity: { duration: 1, ease: "easeInOut" }
-              }}
-              className="absolute inset-0"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="text-center"
             >
-              {/* Image with overlay */}
-              <div className="absolute inset-0">
-                <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/50 z-10"></div>
-                <motion.img 
-                  initial={{ scale: 1.05 }}
-                  animate={{ 
-                    scale: index === currentSlide ? 1 : 1.05
-                  }}
-                  transition={{ duration: 6 }}
-                  src={slide.image} 
-                  alt={slide.title} 
-                  className="w-full h-full object-cover"
-                />
+              <h1 className="text-4xl font-bold text-white mb-3">Nos Chambres</h1>
+              <p className="text-white/90 max-w-2xl mx-auto">
+                Découvrez notre sélection de chambres confortables et élégantes pour un séjour inoubliable
+              </p>
+            </motion.div>
+          </div>
+        </section>
+
+        <div className="container mx-auto max-w-6xl px-6">
+          {/* Search and Filter Bar */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="mb-8"
+          >
+            <div className="bg-white p-4 rounded-lg shadow-sm">
+              <div className="flex flex-col md:flex-row gap-4">
+                {/* Search Box */}
+                <div className="relative flex-grow">
+                  <input
+                    type="text"
+                    placeholder="Rechercher une chambre..."
+                    className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition-all duration-300"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                  <Search className="absolute left-3 top-3.5 text-gray-400" size={18} />
+                </div>
+                
+                {/* Sort Dropdown */}
+                <div className="md:w-64">
+                  <select
+                    className="w-full py-3 px-4 rounded-lg border border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none appearance-none bg-white transition-all duration-300"
+                    value={sortOption}
+                    onChange={(e) => setSortOption(e.target.value)}
+                  >
+                    <option value="default">Trier par</option>
+                    <option value="price-asc">Prix croissant</option>
+                    <option value="price-desc">Prix décroissant</option>
+                    <option value="rating-desc">Meilleure notation</option>
+                    <option value="capacity-desc">Capacité maximum</option>
+                  </select>
+                </div>
+                
+                {/* Filter Button */}
+                <button 
+                  onClick={() => setShowFilters(!showFilters)}
+                  className="flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-6 rounded-lg transition duration-300"
+                >
+                  Filtres
+                  <ChevronDown 
+                    size={16} 
+                    className={`transition-transform duration-300 ${showFilters ? 'rotate-180' : ''}`} 
+                  />
+                </button>
               </div>
               
-              {/* Content */}
-              <div className="relative z-20 flex items-center justify-center h-full px-6">
-                <div className="text-center max-w-3xl">
-                  <motion.h1 
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ 
-                      opacity: index === currentSlide ? 1 : 0,
-                      y: index === currentSlide ? 0 : 30
-                    }}
-                    transition={{ duration: 0.7, delay: 0.2 }}
-                    className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 leading-tight text-white"
-                  >
-                    {slide.title}
-                  </motion.h1>
-                  <motion.p 
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ 
-                      opacity: index === currentSlide ? 1 : 0,
-                      y: index === currentSlide ? 0 : 30
-                    }}
-                    transition={{ duration: 0.7, delay: 0.4 }}
-                    className="text-lg md:text-xl text-gray-200 mb-8"
-                  >
-                    {slide.description}
-                  </motion.p>
+              {/* Advanced Filters */}
+              <AnimatePresence>
+                {showFilters && (
                   <motion.div 
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ 
-                      opacity: index === currentSlide ? 1 : 0,
-                      y: index === currentSlide ? 0 : 30
-                    }}
-                    transition={{ duration: 0.7, delay: 0.6 }}
-                    className="flex flex-col sm:flex-row justify-center gap-4"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="mt-4 pt-4 border-t border-gray-100 overflow-hidden"
                   >
-                    <Link href="#rooms">
-                      <button className="bg-white text-purple-700 hover:bg-purple-50 font-bold py-3 px-8 rounded-lg shadow-lg transition duration-300">
-                        Voir nos chambres
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {/* Capacity Filter */}
+                      <div>
+                        <label className="block text-sm text-gray-600 mb-2">Capacité</label>
+                        <select
+                          className="w-full py-2 px-3 rounded-lg border border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none appearance-none bg-white transition-all duration-300"
+                          value={filterOptions.capacity}
+                          onChange={(e) => setFilterOptions({...filterOptions, capacity: e.target.value})}
+                        >
+                          <option value="">Tous</option>
+                          <option value="1">1+ personne</option>
+                          <option value="2">2+ personnes</option>
+                          <option value="3">3+ personnes</option>
+                          <option value="4">4+ personnes</option>
+                        </select>
+                      </div>
+                      
+                      {/* Availability Filter */}
+                      <div>
+                        <label className="block text-sm text-gray-600 mb-2">Disponibilité</label>
+                        <select
+                          className="w-full py-2 px-3 rounded-lg border border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none appearance-none bg-white transition-all duration-300"
+                          value={filterOptions.available}
+                          onChange={(e) => setFilterOptions({...filterOptions, available: e.target.value})}
+                        >
+                          <option value="all">Tous</option>
+                          <option value="available">Disponible</option>
+                          <option value="unavailable">Non disponible</option>
+                        </select>
+                      </div>
+                      
+                      {/* Price Range Filter */}
+                      <div>
+                        <label className="block text-sm text-gray-600 mb-2">Fourchette de prix</label>
+                        <select
+                          className="w-full py-2 px-3 rounded-lg border border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none appearance-none bg-white transition-all duration-300"
+                          value={filterOptions.priceRange}
+                          onChange={(e) => setFilterOptions({...filterOptions, priceRange: e.target.value})}
+                        >
+                          <option value="">Tous les prix</option>
+                          <option value="0-30000">Jusqu'à 30 000 FCFA</option>
+                          <option value="30000-50000">30 000 - 50 000 FCFA</option>
+                          <option value="50000-70000">50 000 - 70 000 FCFA</option>
+                          <option value="70000-">Plus de 70 000 FCFA</option>
+                        </select>
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-end mt-4">
+                      <button 
+                        onClick={resetFilters}
+                        className="text-purple-600 hover:text-purple-800 font-medium transition duration-300"
+                      >
+                        Réinitialiser les filtres
                       </button>
-                    </Link>
-                    <Link href="/auth/login">
-                      <button className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition duration-300">
-                        Réserver
-                      </button>
-                    </Link>
+                    </div>
                   </motion.div>
-                </div>
-              </div>
-            </motion.div>
-          ))}
-          
-          {/* Navigation buttons */}
-          <button 
-            onClick={prevSlide}
-            className="absolute left-4 top-1/2 transform -translate-y-1/2 z-20 bg-black/20 hover:bg-black/40 text-white w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300"
-          >
-            <ChevronLeft size={24} />
-          </button>
-          <button 
-            onClick={nextSlide}
-            className="absolute right-4 top-1/2 transform -translate-y-1/2 z-20 bg-black/20 hover:bg-black/40 text-white w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300"
-          >
-            <ChevronRight size={24} />
-          </button>
-          
-          {/* Indicator dots */}
-          <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-20 flex space-x-2">
-            {heroSlides.map((_, index) => (
-              <button 
-                key={index}
-                onClick={() => setCurrentSlide(index)}
-                className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                  index === currentSlide ? 'bg-white w-6' : 'bg-white/50 hover:bg-white/70'
-                }`}
-              />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Rooms Section with staggered animation - Simplifié */}
-      <section id="rooms" className="py-16 bg-gray-50" data-section="rooms">
-        <div className="mx-auto container max-w-6xl px-6">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={isVisible.rooms ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.5 }}
-            className="text-center max-w-3xl mx-auto mb-10"
-          >
-            <h2 className="text-3xl font-bold text-gray-800 mb-4">Nos chambres</h2>
-            <p className="text-gray-600">Des espaces accueillants conçus pour votre confort</p>
-          </motion.div>
-          
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={isVisible.rooms ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.5 }}
-            className="flex flex-col md:flex-row gap-4 bg-white p-4 rounded-lg shadow-sm mb-8"
-          >
-            <div className="flex-grow relative">
-              <input
-                type="text"
-                placeholder="Rechercher une chambre..."
-                className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition-all duration-300"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
-            </div>
-            
-            <div className="md:w-48">
-              <select
-                className="w-full py-2 px-4 rounded-lg border border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none appearance-none bg-white transition-all duration-300"
-                value={capacityFilter}
-                onChange={(e) => setCapacityFilter(e.target.value)}
-              >
-                <option value="">Capacité</option>
-                <option value="1">1+ personne</option>
-                <option value="2">2+ personnes</option>
-                <option value="3">3+ personnes</option>
-                <option value="4">4+ personnes</option>
-              </select>
+                )}
+              </AnimatePresence>
             </div>
           </motion.div>
           
+          {/* Results Count */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3, delay: 0.4 }}
+            className="mb-6 text-gray-600"
+          >
+            {filteredChambres.length === 0 ? (
+              <p>Aucune chambre ne correspond à votre recherche</p>
+            ) : (
+              <p>{filteredChambres.length} chambre{filteredChambres.length > 1 ? 's' : ''} trouvée{filteredChambres.length > 1 ? 's' : ''}</p>
+            )}
+          </motion.div>
+          
+          {/* Chambres Grid */}
           <motion.div 
             variants={staggerContainer}
             initial="hidden"
-            animate={isVisible.rooms ? "visible" : "hidden"}
+            animate="visible"
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
           >
             {filteredChambres.map((room, index) => (
@@ -566,20 +595,20 @@ export default function Homepage() {
                 key={index} 
                 variants={cardVariants}
                 whileHover={{ y: -5, transition: { duration: 0.2 } }}
-                className={`bg-white rounded-lg shadow-md overflow-hidden ${!room.disponible ? 'opacity-70' : ''}`}
+                className={`bg-white rounded-xl shadow-md overflow-hidden transition-shadow duration-300 hover:shadow-lg ${!room.disponible ? 'opacity-80' : ''}`}
               >
-                <div className="relative overflow-hidden">
+                <div className="relative overflow-hidden h-56">
                   <img
                     src={room.image}
                     alt={room.titre}
-                    className="w-full h-52 object-cover"
+                    className="w-full h-full object-cover transition-transform duration-700 hover:scale-110"
                   />
                   <button 
                     onClick={() => toggleFavorite(index)}
-                    className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/80 flex items-center justify-center transition hover:bg-white shadow-md"
+                    className="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/80 flex items-center justify-center transition hover:bg-white shadow-md"
                   >
                     <Heart 
-                      size={16} 
+                      size={18} 
                       className={`${
                         favorites.includes(index) ? 'text-red-500 fill-red-500' : 'text-gray-600'
                       } transition-colors`} 
@@ -587,167 +616,87 @@ export default function Homepage() {
                   </button>
                   {!room.disponible && (
                     <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                      <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+                      <span className="bg-red-500 text-white px-4 py-1.5 rounded-full text-sm font-medium">
                         Non disponible
                       </span>
                     </div>
                   )}
                 </div>
                 
-                <div className="p-5">
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-lg font-bold text-gray-800">{room.titre}</h3>
+                <div className="p-6">
+                  <div className="flex justify-between items-start mb-3">
+                    <h3 className="text-xl font-bold text-gray-800">{room.titre}</h3>
                     <div className="font-bold text-purple-600">
                       {room.prix}
                       <span className="text-xs text-gray-500 font-normal">/{room.duree}</span>
                     </div>
                   </div>
                   
-                  <p className="text-gray-600 text-sm mb-3">{room.description}</p>
+                  <p className="text-gray-600 text-sm mb-4">{room.description}</p>
                   
-                  <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center">
-                      <Users size={14} className="text-gray-500 mr-1" />
+                      <Users size={16} className="text-gray-500 mr-1.5" />
                       <span className="text-sm text-gray-600">{room.capacite} {room.capacite > 1 ? 'personnes' : 'personne'}</span>
                     </div>
                     <RatingStars rating={room.notation} />
                   </div>
                   
-                  <div className="flex flex-wrap gap-1 mb-4">
-                    {room.commodites.slice(0, 3).map((item, i) => (
-                      <span key={i} className="text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded-full">
-                        {item}
-                      </span>
-                    ))}
-                    {room.commodites.length > 3 && (
-                      <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full">
-                        +{room.commodites.length - 3}
-                      </span>
-                    )}
-                  </div>
+                  <div className="flex flex-wrap gap-1.5 mb-5">
+                  {room.commodites.slice(0, 3).map((item, i) => (
+      <span key={i} className="text-xs bg-purple-50 text-purple-700 rounded-full px-2.5 py-1">
+        {item}
+      </span>
+    ))}
+    {room.commodites.length > 3 && (
+      <span className="text-xs bg-gray-50 text-gray-700 rounded-full px-2.5 py-1">
+        +{room.commodites.length - 3}
+      </span>
+    )}
+  </div>
                   
-                  <button
-                    onClick={() => handleRoomClick(room.id)}
-                    disabled={!room.disponible}
-                    className={`w-full py-2 px-4 rounded-lg font-medium transition-colors duration-300 ${
-                      room.disponible 
-                        ? 'bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white' 
-                        : 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                    }`}
-                  >
-                    {room.disponible ? 'Réserver' : 'Indisponible'}
-                  </button>
-                </div>
+  <button 
+    onClick={() => handleRoomClick(room.id)}
+    className={`w-full py-2.5 rounded-lg font-medium transition duration-300 ${
+      room.disponible 
+        ? 'bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white shadow-md' 
+        : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+    }`}
+    disabled={!room.disponible}
+  >
+    {room.disponible ? 'Voir les détails' : 'Non disponible'}
+  </button>
+</div>
               </motion.div>
             ))}
           </motion.div>
           
+          {/* Empty State */}
           {filteredChambres.length === 0 && (
-            <motion.div
+            <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5 }}
-              className="bg-gray-100 rounded-lg p-8 text-center my-8"
+              className="text-center py-16 bg-white rounded-lg shadow-sm mt-8"
             >
-              <p className="text-gray-600">Aucune chambre ne correspond à votre recherche.</p>
+              <div className="mb-4 text-gray-400">
+                <Search size={48} className="mx-auto" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-800 mb-2">Aucune chambre trouvée</h3>
+              <p className="text-gray-600 max-w-md mx-auto mb-6">
+                Essayez de modifier vos critères de recherche ou de réinitialiser les filtres pour voir toutes nos chambres.
+              </p>
               <button 
-                className="mt-3 text-purple-600 hover:text-purple-800 font-medium" 
-                onClick={() => {setSearchTerm(''); setCapacityFilter('');}}
+                onClick={resetFilters}
+                className="bg-purple-100 text-purple-700 hover:bg-purple-200 px-6 py-2 rounded-lg font-medium transition duration-300"
               >
                 Réinitialiser les filtres
               </button>
             </motion.div>
           )}
         </div>
-      </section>
+      </main>
 
-      {/* Services Section - Simplifié */}
-      <section className="py-16 bg-white" data-section="services">
-        <div className="mx-auto container max-w-6xl px-6">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={isVisible.services ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.5 }}
-            className="text-center max-w-3xl mx-auto mb-10"
-          >
-            <h2 className="text-3xl font-bold text-gray-800 mb-4">Nos services</h2>
-            <p className="text-gray-600">Découvrez notre gamme de services pour un séjour parfait</p>
-          </motion.div>
-          
-          <motion.div 
-            variants={staggerContainer}
-            initial="hidden"
-            animate={isVisible.services ? "visible" : "hidden"}
-            className="grid grid-cols-1 md:grid-cols-3 gap-8"
-          >
-            {[
-              {
-                title: "Service de chambre",
-                description: "Profitez d'un service de chambre disponible 24h/24 pour répondre à tous vos besoins pendant votre séjour. Menu complet disponible à toute heure.",
-                image: "https://img.freepik.com/photos-gratuite/femme-chambre-faisant-lit-dans-chambre-hotel_171337-12691.jpg?uid=R99967860&ga=GA1.1.295640253.1746478949&semt=ais_hybrid&w=740"
-              },
-              {
-                title: "WiFi haut débit",
-                description: "Connexion internet haute vitesse gratuite disponible dans tout l'établissement, pour rester connecté pendant votre séjour, que ce soit pour le travail ou les loisirs.",
-                image: "https://img.freepik.com/photos-gratuite/gros-plan-telephone-dans-mains-symbole-wifi_23-2148295840.jpg?uid=R99967860&ga=GA1.1.295640253.1746478949&semt=ais_hybrid&w=740"
-              },
-              {
-                title: "Service de blanchisserie",
-                description: "Notre service de blanchisserie rapide assure l'entretien de vos vêtements pendant votre séjour avec repassage et nettoyage à sec disponibles.",
-                image: "https://img.freepik.com/photos-gratuite/femme-afro-americaine-joyeuse-serviettes-dans-mains-pres-machine-laver-dans-blanchisserie-libre-service_627829-4655.jpg?uid=R99967860&ga=GA1.1.295640253.1746478949&semt=ais_hybrid&w=740"
-              }
-            ].map((service, index) => (
-              <motion.div 
-                key={index} 
-                variants={cardVariants}
-                className="bg-gray-50 rounded-lg shadow-sm overflow-hidden"
-              >
-                <div className="h-48 overflow-hidden">
-                  <img
-                    src={service.image}
-                    alt={service.title}
-                    className="w-full h-full object-cover transition-transform duration-700 hover:scale-110"
-                  />
-                </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-semibold text-gray-800 mb-2">{service.title}</h3>
-                  <p className="text-gray-600">{service.description}</p>
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Call to Action */}
-      <section className="py-20 bg-gradient-to-r from-purple-500 to-indigo-600" data-section="cta">
-        <div className="mx-auto container max-w-6xl px-6">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={isVisible.cta ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.6 }}
-            className="text-center max-w-3xl mx-auto"
-          >
-            <h2 className="text-3xl font-bold text-white mb-6">Réservez dès maintenant</h2>
-            <p className="text-white/90 text-lg mb-8">
-              Profitez d'une expérience de séjour inoubliable dans notre maison d'hôte
-            </p>
-            <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <Link href="/auth/register">
-                <button className="bg-white text-purple-700 hover:bg-purple-50 font-bold py-3 px-8 rounded-lg shadow-lg transition duration-300">
-                  Créer un compte
-                </button>
-              </Link>
-              <Link href="/auth/login">
-                <button className="bg-purple-800/30 hover:bg-purple-800/40 text-white border border-white/30 font-bold py-3 px-8 rounded-lg shadow-lg transition duration-300">
-                  Se connecter
-                </button>
-              </Link>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-      
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-12">
         <div className="mx-auto container max-w-6xl px-6">
@@ -767,7 +716,7 @@ export default function Homepage() {
             <div>
               <h4 className="text-lg font-semibold mb-4">Liens rapides</h4>
               <ul className="text-gray-400 space-y-2">
-                {["Accueil", "Chambres",  "À propos", "Contact"].map((item) => (
+                {["Accueil", "Chambres", "À propos", "Contact"].map((item) => (
                   <li key={item}>
                     <Link href={`/${item.toLowerCase().replace(" ", "-")}`} className="hover:text-purple-400 transition-colors">
                       {item}
@@ -807,6 +756,6 @@ export default function Homepage() {
           </div>
         </div>
       </footer>
-    </div>
+    </motion.div>
   );
 }
